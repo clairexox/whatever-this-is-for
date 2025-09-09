@@ -1,5 +1,1160 @@
-hello world
 <!DOCTYPE html>
-suck dic
-ok
-<html></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle for Nadia</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&family=Kalam:wght@300;400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .wordle-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .word-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .letter-box.filled {
+            border-color: #6b7280;
+            background: #f9fafb;
+        }
+
+        .letter-box.correct {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .letter-box.present {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: white;
+        }
+
+        .letter-box.absent {
+            background: #6b7280;
+            border-color: #6b7280;
+            color: white;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .key {
+            padding: 12px 8px;
+            background: #e5e7eb;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 30px;
+            font-size: 0.9rem;
+        }
+
+        .key:hover {
+            background: #d1d5db;
+        }
+
+        .key.wide {
+            padding: 12px 16px;
+            font-size: 0.8rem;
+        }
+
+        .key.correct {
+            background: #10b981;
+            color: white;
+        }
+
+        .key.present {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .key.absent {
+            background: #6b7280;
+            color: white;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Magazine Styles */
+        .magazine-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #f8f6f0;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 20px 20px, #e8e4d9 1px, transparent 1px),
+                radial-gradient(circle at 60px 60px, #e8e4d9 1px, transparent 1px);
+            background-size: 40px 40px, 80px 80px;
+        }
+
+        .magazine-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .magazine-page {
+            min-width: 100%;
+            height: 100%;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            background: #f8f6f0;
+        }
+
+        .page-1 {
+            background-image: 
+                linear-gradient(90deg, #d4af37 1px, transparent 1px),
+                linear-gradient(180deg, #d4af37 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-color: #fefdfb;
+        }
+
+        .page-2 {
+            background-image: 
+                linear-gradient(45deg, #ff6b9d 1px, transparent 1px),
+                linear-gradient(-45deg, #ff6b9d 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #fff8fc;
+        }
+
+        .page-3 {
+            background-image: 
+                repeating-linear-gradient(0deg, #4ecdc4, #4ecdc4 1px, transparent 1px, transparent 25px);
+            background-color: #f0fffe;
+        }
+
+        .page-4 {
+            background-image: 
+                radial-gradient(circle at 25% 25%, #feca57 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #ff9ff3 2px, transparent 2px);
+            background-size: 50px 50px, 30px 30px;
+            background-color: #fffef7;
+        }
+
+        .page-5 {
+            background-image: 
+                linear-gradient(90deg, #a8e6cf 1px, transparent 1px);
+            background-size: 25px 25px;
+            background-color: #f9fffe;
+        }
+
+        .page-6 {
+            background-image: 
+                radial-gradient(circle at 30% 30%, #ff6b9d 3px, transparent 3px),
+                radial-gradient(circle at 70% 70%, #4ecdc4 2px, transparent 2px),
+                radial-gradient(circle at 20% 80%, #feca57 2px, transparent 2px);
+            background-size: 60px 60px, 40px 40px, 80px 80px;
+            background-color: #fefefe;
+        }
+
+        .magazine-title {
+            font-family: 'Kalam', cursive;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+            transform: rotate(-1deg);
+            text-shadow: 3px 3px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+        }
+
+        .magazine-subtitle {
+            font-family: 'Kalam', cursive;
+            font-size: 1.4rem;
+            color: #e53e3e;
+            margin-bottom: 25px;
+            transform: rotate(0.5deg);
+            text-decoration: underline;
+            text-decoration-color: #ff6b9d;
+            text-decoration-style: wavy;
+        }
+
+        .handwritten-text {
+            font-family: 'Kalam', cursive;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #2d3748;
+            margin: 20px 0;
+            transform: rotate(-0.3deg);
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 25px;
+            max-width: 900px;
+            width: 100%;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border: 3px solid #2d3748;
+            border-radius: 0;
+            box-shadow: 8px 8px 0px #ff6b9d;
+            transform: rotate(-1deg);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:nth-child(even) {
+            transform: rotate(1deg);
+            box-shadow: 8px 8px 0px #4ecdc4;
+        }
+
+        .stat-card:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .stat-number {
+            font-family: 'Kalam', cursive;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #e53e3e;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 0px #fff;
+        }
+
+        .stat-label {
+            font-family: 'Kalam', cursive;
+            font-size: 1rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .trinkets {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="8" fill="%23ff6b9d" opacity="0.7"/><polygon points="60,10 70,30 50,30" fill="%23feca57" opacity="0.8"/><rect x="10" y="60" width="15" height="15" rx="3" fill="%2348cae4" opacity="0.6"/><circle cx="80" cy="70" r="6" fill="%23ff9ff3" opacity="0.7"/><polygon points="30,80 40,90 20,90" fill="%23a8e6cf" opacity="0.8"/></svg>') no-repeat center;
+            background-size: contain;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .trinkets-1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .trinkets-2 { top: 20%; right: 15%; animation-delay: 2s; }
+        .trinkets-3 { bottom: 30%; left: 20%; animation-delay: 4s; }
+        .trinkets-4 { bottom: 20%; right: 10%; animation-delay: 1s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .birthday-message {
+            font-family: 'Kalam', cursive;
+            font-size: 1.2rem;
+            color: #2d3748;
+            max-width: 600px;
+            line-height: 1.8;
+            margin: 20px 0;
+            transform: rotate(-0.2deg);
+            text-align: left;
+        }
+
+        .interactive-element {
+            background: white;
+            border: 3px solid #2d3748;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 6px 6px 0px #feca57;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: rotate(-0.5deg);
+        }
+
+        .interactive-element:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 8px 8px 0px #ff6b9d;
+        }
+
+        .memory-card {
+            background: #fff;
+            border: 2px dashed #ff6b9d;
+            padding: 25px;
+            margin: 15px 0;
+            transform: rotate(1deg);
+            transition: transform 0.3s ease;
+        }
+
+        .memory-card:nth-child(even) {
+            transform: rotate(-0.8deg);
+            border-color: #4ecdc4;
+        }
+
+        .memory-card:hover {
+            transform: rotate(0deg);
+        }
+
+        .polaroid {
+            background: white;
+            padding: 15px 15px 50px 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: rotate(-3deg);
+            margin: 20px;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .polaroid:nth-child(even) {
+            transform: rotate(2deg);
+        }
+
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.05);
+        }
+
+        .polaroid-caption {
+            font-family: 'Kalam', cursive;
+            text-align: center;
+            margin-top: 10px;
+            color: #2d3748;
+            font-size: 0.9rem;
+        }
+
+        .doodle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            opacity: 0.6;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .doodle-1 { top: 15%; left: 5%; animation-delay: 0s; }
+        .doodle-2 { top: 25%; right: 8%; animation-delay: 3s; }
+        .doodle-3 { bottom: 35%; left: 10%; animation-delay: 6s; }
+        .doodle-4 { bottom: 15%; right: 5%; animation-delay: 2s; }
+
+        .quiz-container {
+            background: white;
+            border: 3px solid #2d3748;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 8px 8px 0px #a8e6cf;
+            transform: rotate(-0.8deg);
+        }
+
+        .quiz-option {
+            background: #f8f6f0;
+            border: 2px solid #2d3748;
+            padding: 12px 20px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Kalam', cursive;
+        }
+
+        .quiz-option:hover {
+            background: #ff6b9d;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .timeline-item {
+            background: white;
+            border-left: 4px solid #ff6b9d;
+            padding: 20px;
+            margin: 15px 0;
+            position: relative;
+            transform: rotate(-0.3deg);
+        }
+
+        .timeline-item:nth-child(even) {
+            border-left-color: #4ecdc4;
+            transform: rotate(0.4deg);
+        }
+
+        .timeline-item::before {
+            content: '♥';
+            position: absolute;
+            left: -12px;
+            top: 20px;
+            background: white;
+            color: #ff6b9d;
+            font-size: 1.2rem;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px dashed #ff6b9d;
+        }
+
+        .sticker {
+            display: inline-block;
+            background: #feca57;
+            color: #2d3748;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-family: 'Kalam', cursive;
+            font-weight: 700;
+            transform: rotate(-5deg);
+            margin: 5px;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+
+        .sticker:nth-child(even) {
+            background: #ff9ff3;
+            transform: rotate(3deg);
+        }
+
+        .sticker:nth-child(3n) {
+            background: #4ecdc4;
+            transform: rotate(-2deg);
+        }
+
+        @media (max-width: 768px) {
+            .magazine-title { font-size: 2rem; }
+            .magazine-page { padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .trinkets { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Wordle Game -->
+    <div class="wordle-container" id="wordleGame">
+        <h1 class="title">Wordle</h1>
+        <p class="subtitle">Who's your girl?</p>
+        
+        <div class="game-board" id="gameBoard">
+            <!-- Game rows will be generated by JavaScript -->
+        </div>
+        
+        <div class="keyboard" id="keyboard">
+            <div class="keyboard-row">
+                <button class="key" data-key="Q">Q</button>
+                <button class="key" data-key="W">W</button>
+                <button class="key" data-key="E">E</button>
+                <button class="key" data-key="R">R</button>
+                <button class="key" data-key="T">T</button>
+                <button class="key" data-key="Y">Y</button>
+                <button class="key" data-key="U">U</button>
+                <button class="key" data-key="I">I</button>
+                <button class="key" data-key="O">O</button>
+                <button class="key" data-key="P">P</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" data-key="A">A</button>
+                <button class="key" data-key="S">S</button>
+                <button class="key" data-key="D">D</button>
+                <button class="key" data-key="F">F</button>
+                <button class="key" data-key="G">G</button>
+                <button class="key" data-key="H">H</button>
+                <button class="key" data-key="J">J</button>
+                <button class="key" data-key="K">K</button>
+                <button class="key" data-key="L">L</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key wide" data-key="ENTER">ENTER</button>
+                <button class="key" data-key="Z">Z</button>
+                <button class="key" data-key="X">X</button>
+                <button class="key" data-key="C">C</button>
+                <button class="key" data-key="V">V</button>
+                <button class="key" data-key="B">B</button>
+                <button class="key" data-key="N">N</button>
+                <button class="key" data-key="M">M</button>
+                <button class="key wide" data-key="BACKSPACE">⌫</button>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+
+    <!-- Magazine -->
+    <div class="magazine-container" id="magazine">
+        <div class="magazine-wrapper" id="magazineWrapper">
+            <!-- Page 1: Welcome -->
+            <div class="magazine-page page-1">
+                <div class="doodle doodle-1">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20,50 Q50,20 80,50 Q50,80 20,50" fill="none" stroke="#ff6b9d" stroke-width="3"/>
+                        <circle cx="50" cy="50" r="5" fill="#feca57"/>
+                    </svg>
+                </div>
+                <div class="doodle doodle-2">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <polygon points="50,10 60,40 90,40 70,60 80,90 50,70 20,90 30,60 10,40 40,40" fill="#4ecdc4"/>
+                    </svg>
+                </div>
+                
+                <div class="page-header">
+                    <h1 class="magazine-title">Happy Birthday Nadia! 🎉</h1>
+                    <p class="magazine-subtitle">Your Personal Love Magazine</p>
+                </div>
+                
+                <div class="handwritten-text">
+                    Hey beautiful! Welcome to your very own birthday magazine - think of it as your relationship wrapped, but way more personal and filled with all our inside jokes and memories. I've put together something special just for you because you deserve the world and more! ✨
+                </div>
+
+                <div class="interactive-element" onclick="showSurprise(this)">
+                    <h3 style="font-family: 'Kalam', cursive; margin: 0; color: #e53e3e;">Click here for your first surprise! 💝</h3>
+                    <div class="surprise-content" style="display: none; margin-top: 15px;">
+                        <p style="font-family: 'Kalam', cursive; color: #2d3748;">You know what? You're not just my girlfriend... you're my best friend, my partner in crime, my favorite person to annoy, and the reason I smile every single day! 💕</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <span class="sticker">Birthday Girl</span>
+                    <span class="sticker">My Everything</span>
+                    <span class="sticker">Queen</span>
+                    <span class="sticker">Perfect</span>
+                </div>
+            </div>
+
+            <!-- Page 2: Love Stats -->
+            <div class="magazine-page page-2">
+                <div class="doodle doodle-3">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50,20 C30,5 5,20 5,45 C5,70 50,90 50,90 C50,90 95,70 95,45 C95,20 70,5 50,20Z" fill="#ff6b9d"/>
+                    </svg>
+                </div>
+                
+                <div class="page-header">
+                    <h2 class="magazine-title">Your Love Stats 📊</h2>
+                    <p class="magazine-subtitle">The numbers don't lie!</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">365+</div>
+                        <div class="stat-label">Days of Making Me Smile</div>
+                    </div>
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">∞</div>
+                        <div class="stat-label">Reasons I Love You</div>
+                    </div>
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Perfect Match Rate</div>
+                    </div>
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Thinking About You</div>
+                    </div>
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Most Beautiful Girl</div>
+                    </div>
+                    <div class="stat-card" onclick="animateCard(this)">
+                        <div class="stat-number">999+</div>
+                        <div class="stat-label">Butterflies Per Day</div>
+                    </div>
+                </div>
+
+                <div class="handwritten-text">
+                    These aren't just random numbers - they represent every moment you've made my life brighter, every laugh we've shared, and every reason why I fall for you more each day! 💕
+                </div>
+            </div>
+
+            <!-- Page 3: Memory Lane -->
+            <div class="magazine-page page-3">
+                <div class="page-header">
+                    <h2 class="magazine-title">Memory Lane 📸</h2>
+                    <p class="magazine-subtitle">Our favorite moments together</p>
+                </div>
+
+                <div class="memory-card">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 10px;">First Time We Met 💫</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">I still remember that moment when I first saw you and thought "Wow, she's going to change my whole world" - and I was absolutely right!</p>
+                </div>
+
+                <div class="memory-card">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 10px;">Our First Date 🌟</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">Nervous? Me? Never! (Okay maybe a little... or a lot!) But you made everything feel so natural and perfect.</p>
+                </div>
+
+                <div class="memory-card">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 10px;">That Time You... 😂</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">Made me laugh so hard I almost cried! Your sense of humor is one of the million things I adore about you.</p>
+                </div>
+
+                <div class="polaroid">
+                    <div style="width: 200px; height: 150px; background: linear-gradient(45deg, #ff6b9d, #4ecdc4); display: flex; align-items: center; justify-content: center; color: white; font-family: 'Kalam', cursive;">
+                        Your Photo Here 📷
+                    </div>
+                    <div class="polaroid-caption">The most beautiful smile ✨</div>
+                </div>
+
+                <div class="polaroid">
+                    <div style="width: 200px; height: 150px; background: linear-gradient(45deg, #feca57, #ff9ff3); display: flex; align-items: center; justify-content: center; color: white; font-family: 'Kalam', cursive;">
+                        Us Together 💕
+                    </div>
+                    <div class="polaroid-caption">Perfect couple goals!</div>
+                </div>
+            </div>
+
+            <!-- Page 4: Fun Quiz -->
+            <div class="magazine-page page-4">
+                <div class="doodle doodle-4">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="30" fill="none" stroke="#feca57" stroke-width="4"/>
+                        <text x="50" y="55" text-anchor="middle" font-size="20" fill="#feca57">?</text>
+                    </svg>
+                </div>
+                
+                <div class="page-header">
+                    <h2 class="magazine-title">Birthday Quiz! 🎯</h2>
+                    <p class="magazine-subtitle">How well do you know yourself?</p>
+                </div>
+
+                <div class="quiz-container">
+                    <h4 style="font-family: 'Kalam', cursive; color: #2d3748; margin-bottom: 15px;">What's your superpower?</h4>
+                    <div class="quiz-option" onclick="selectQuizAnswer(this, 'Making everyone around you happy! ✨')">Making people smile</div>
+                    <div class="quiz-option" onclick="selectQuizAnswer(this, 'Being absolutely gorgeous inside and out! 💕')">Being beautiful</div>
+                    <div class="quiz-option" onclick="selectQuizAnswer(this, 'Having the biggest, most loving heart! ❤️')">Spreading love</div>
+                    <div class="quiz-option" onclick="selectQuizAnswer(this, 'All of the above because you\'re perfect! 🌟')">All of the above</div>
+                    <div id="quiz-result" style="margin-top: 15px; font-family: 'Kalam', cursive; color: #e53e3e; font-weight: 600;"></div>
+                </div>
+
+                <div class="handwritten-text">
+                    Trick question - the answer is always "all of the above" because you're literally perfect in every way! But I love seeing you think about it 😊
+                </div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <span class="sticker">Smart</span>
+                    <span class="sticker">Funny</span>
+                    <span class="sticker">Kind</span>
+                    <span class="sticker">Amazing</span>
+                    <span class="sticker">Mine</span>
+                </div>
+            </div>
+
+            <!-- Page 5: Timeline -->
+            <div class="magazine-page page-5">
+                <div class="page-header">
+                    <h2 class="magazine-title">Our Love Timeline 💕</h2>
+                    <p class="magazine-subtitle">The story of us</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 8px;">Chapter 1: The Beginning</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">When two hearts found each other and everything just clicked perfectly ✨</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 8px;">Chapter 2: Falling Deeper</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">Every day brought new reasons to fall more in love with your beautiful soul 💫</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 8px;">Chapter 3: Adventures Together</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">Creating memories, sharing dreams, and building our own little world 🌍</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4 style="font-family: 'Kalam', cursive; color: #e53e3e; margin-bottom: 8px;">Chapter 4: Today & Forever</h4>
+                    <p style="font-family: 'Kalam', cursive; color: #2d3748;">Your birthday and every day after - celebrating the amazing person you are! 🎉</p>
+                </div>
+
+                <div class="birthday-message">
+                    And this is just the beginning of our story! I can't wait to write a million more chapters with you, filled with laughter, adventures, and endless love. Happy Birthday to the most incredible girl in the world! 💕
+                </div>
+            </div>
+
+            <!-- Page 6: Thank You -->
+            <div class="magazine-page page-6">
+                <div class="doodle doodle-1">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50,20 C30,5 5,20 5,45 C5,70 50,90 50,90 C50,90 95,70 95,45 C95,20 70,5 50,20Z" fill="#ff6b9d"/>
+                        <path d="M50,30 C35,20 20,30 20,50 C20,65 50,80 50,80 C50,80 80,65 80,50 C80,30 65,20 50,30Z" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="doodle doodle-2">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="25" fill="none" stroke="#feca57" stroke-width="4"/>
+                        <text x="50" y="58" text-anchor="middle" font-size="30" fill="#feca57">♥</text>
+                    </svg>
+                </div>
+                
+                <div class="page-header">
+                    <h2 class="magazine-title">Thank You! 🙏</h2>
+                    <p class="magazine-subtitle">For being absolutely perfect</p>
+                </div>
+
+                <div class="interactive-element" onclick="showFinalMessage(this)" style="margin: 30px 0;">
+                    <h3 style="font-family: 'Kalam', cursive; margin: 0; color: #e53e3e;">Click for one last surprise! 💝</h3>
+                    <div class="final-message" style="display: none; margin-top: 20px;">
+                        <p style="font-family: 'Kalam', cursive; color: #2d3748; font-size: 1.3rem; line-height: 1.8;">
+                            Thank you for being the most amazing girlfriend, best friend, and partner anyone could ask for. Thank you for your beautiful smile that lights up my entire world, for your laugh that makes everything better, and for your heart that's bigger than the universe itself. 💕
+                        </p>
+                    </div>
+                </div>
+
+                <div class="handwritten-text" style="text-align: center; font-size: 1.3rem; margin: 40px 0;">
+                    Thank you for being YOU - perfectly imperfect, absolutely beautiful, incredibly smart, endlessly kind, and completely mine. This little magazine is just a tiny glimpse of how much you mean to me, but I hope it made you smile as much as you make me smile every single day! 
+                </div>
+
+                <div class="handwritten-text" style="text-align: center; font-size: 1.4rem; color: #e53e3e; font-weight: 700;">
+                    Happy Birthday, my love! Here's to another year of being absolutely incredible! 🎉✨💕
+                </div>
+
+                <div style="text-align: center; margin: 40px 0;">
+                    <span class="sticker">Thank You</span>
+                    <span class="sticker">I Love You</span>
+                    <span class="sticker">Forever</span>
+                    <span class="sticker">Always</span>
+                    <span class="sticker">My Heart</span>
+                </div>
+
+                <div style="text-align: center; margin-top: 50px; font-family: 'Kalam', cursive; color: #718096; font-size: 0.9rem;">
+                    Made with endless love just for you ♥<br>
+                    Your favorite person in the world 😊
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" onclick="previousPage()">← Previous</button>
+            <button class="nav-btn" onclick="nextPage()">Next →</button>
+        </div>
+    </div>
+
+    <!-- Audio element for background music -->
+    <audio id="backgroundMusic" loop>
+        <source src="your-custom-music.mp3" type="audio/mpeg">
+        <!-- Add your custom music file URL here -->
+    </audio>
+
+    <script>
+        class WordleGame {
+            constructor() {
+                this.targetWord = 'NADIA';
+                this.currentRow = 0;
+                this.currentCol = 0;
+                this.gameBoard = [];
+                this.gameOver = false;
+                this.currentPage = 0;
+                
+                this.initializeGame();
+                this.setupEventListeners();
+            }
+
+            initializeGame() {
+                const board = document.getElementById('gameBoard');
+                
+                // Create 6 rows of 5 boxes each
+                for (let i = 0; i < 6; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'word-row';
+                    
+                    const rowData = [];
+                    for (let j = 0; j < 5; j++) {
+                        const box = document.createElement('div');
+                        box.className = 'letter-box';
+                        box.id = `box-${i}-${j}`;
+                        row.appendChild(box);
+                        rowData.push('');
+                    }
+                    
+                    board.appendChild(row);
+                    this.gameBoard.push(rowData);
+                }
+            }
+
+            setupEventListeners() {
+                // Keyboard clicks
+                document.getElementById('keyboard').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('key')) {
+                        this.handleKeyPress(e.target.dataset.key);
+                    }
+                });
+
+                // Physical keyboard
+                document.addEventListener('keydown', (e) => {
+                    if (this.gameOver) return;
+                    
+                    if (e.key === 'Enter') {
+                        this.handleKeyPress('ENTER');
+                    } else if (e.key === 'Backspace') {
+                        this.handleKeyPress('BACKSPACE');
+                    } else if (/^[A-Za-z]$/.test(e.key)) {
+                        this.handleKeyPress(e.key.toUpperCase());
+                    }
+                });
+            }
+
+            handleKeyPress(key) {
+                if (this.gameOver) return;
+
+                if (key === 'ENTER') {
+                    this.submitGuess();
+                } else if (key === 'BACKSPACE') {
+                    this.deleteLetter();
+                } else if (/^[A-Z]$/.test(key)) {
+                    this.addLetter(key);
+                }
+            }
+
+            addLetter(letter) {
+                if (this.currentCol < 5) {
+                    this.gameBoard[this.currentRow][this.currentCol] = letter;
+                    const box = document.getElementById(`box-${this.currentRow}-${this.currentCol}`);
+                    box.textContent = letter;
+                    box.classList.add('filled');
+                    this.currentCol++;
+                }
+            }
+
+            deleteLetter() {
+                if (this.currentCol > 0) {
+                    this.currentCol--;
+                    this.gameBoard[this.currentRow][this.currentCol] = '';
+                    const box = document.getElementById(`box-${this.currentRow}-${this.currentCol}`);
+                    box.textContent = '';
+                    box.classList.remove('filled');
+                }
+            }
+
+            submitGuess() {
+                if (this.currentCol !== 5) {
+                    this.showMessage('Not enough letters!', 'error');
+                    return;
+                }
+
+                const guess = this.gameBoard[this.currentRow].join('');
+                this.checkGuess(guess);
+                
+                if (guess === this.targetWord) {
+                    this.gameOver = true;
+                    setTimeout(() => {
+                        this.showMagazine();
+                    }, 1500);
+                } else if (this.currentRow === 5) {
+                    this.gameOver = true;
+                    this.showMessage('Game Over! The answer was NADIA', 'error');
+                } else {
+                    this.currentRow++;
+                    this.currentCol = 0;
+                }
+            }
+
+            checkGuess(guess) {
+                const targetArray = this.targetWord.split('');
+                const guessArray = guess.split('');
+                const result = new Array(5).fill('absent');
+                const targetUsed = new Array(5).fill(false);
+
+                // First pass: mark correct letters
+                for (let i = 0; i < 5; i++) {
+                    if (guessArray[i] === targetArray[i]) {
+                        result[i] = 'correct';
+                        targetUsed[i] = true;
+                    }
+                }
+
+                // Second pass: mark present letters
+                for (let i = 0; i < 5; i++) {
+                    if (result[i] === 'absent') {
+                        for (let j = 0; j < 5; j++) {
+                            if (!targetUsed[j] && guessArray[i] === targetArray[j]) {
+                                result[i] = 'present';
+                                targetUsed[j] = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Apply colors to boxes and keyboard
+                for (let i = 0; i < 5; i++) {
+                    const box = document.getElementById(`box-${this.currentRow}-${i}`);
+                    const key = document.querySelector(`[data-key="${guessArray[i]}"]`);
+                    
+                    setTimeout(() => {
+                        box.classList.add(result[i]);
+                        
+                        // Update keyboard key color (only if it's not already correct)
+                        if (!key.classList.contains('correct')) {
+                            if (result[i] === 'correct' || result[i] === 'present') {
+                                key.classList.remove('absent');
+                                key.classList.add(result[i]);
+                            } else if (!key.classList.contains('present')) {
+                                key.classList.add('absent');
+                            }
+                        }
+                    }, i * 100);
+                }
+
+                if (guess === this.targetWord) {
+                    this.showMessage('Congratulations! 💕', 'success');
+                }
+            }
+
+            showMessage(text, type) {
+                const message = document.getElementById('message');
+                message.textContent = text;
+                message.className = `message ${type} show`;
+                
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 3000);
+            }
+
+            showMagazine() {
+                document.getElementById('wordleGame').style.display = 'none';
+                document.getElementById('magazine').style.display = 'block';
+                
+                // Start background music
+                const music = document.getElementById('backgroundMusic');
+                music.play().catch(e => {
+                    console.log('Music autoplay prevented by browser');
+                });
+            }
+        }
+
+        // Magazine navigation functions
+        function nextPage() {
+            const wrapper = document.getElementById('magazineWrapper');
+            const currentTransform = wrapper.style.transform;
+            const currentX = currentTransform ? parseInt(currentTransform.match(/-?\d+/)) || 0 : 0;
+            
+            if (Math.abs(currentX) < 500) { // Max 5 pages to swipe (6 total pages)
+                wrapper.style.transform = `translateX(${currentX - 100}%)`;
+            }
+        }
+
+        function previousPage() {
+            const wrapper = document.getElementById('magazineWrapper');
+            const currentTransform = wrapper.style.transform;
+            const currentX = currentTransform ? parseInt(currentTransform.match(/-?\d+/)) || 0 : 0;
+            
+            if (currentX < 0) {
+                wrapper.style.transform = `translateX(${currentX + 100}%)`;
+            }
+        }
+
+        // Interactive functions for magazine
+        function showSurprise(element) {
+            const surpriseContent = element.querySelector('.surprise-content');
+            if (surpriseContent.style.display === 'none') {
+                surpriseContent.style.display = 'block';
+                element.querySelector('h3').textContent = 'Aww, you found it! 💕';
+                element.style.background = '#ff6b9d';
+                element.style.color = 'white';
+            }
+        }
+
+        function animateCard(card) {
+            card.style.transform = 'rotate(0deg) scale(1.1)';
+            card.style.background = '#ff6b9d';
+            card.style.color = 'white';
+            
+            setTimeout(() => {
+                card.style.transform = card.classList.contains('stat-card') ? 
+                    (Array.from(card.parentNode.children).indexOf(card) % 2 === 0 ? 'rotate(-1deg)' : 'rotate(1deg)') : 
+                    'rotate(-1deg)';
+                card.style.background = 'white';
+                card.style.color = '#2d3748';
+            }, 1000);
+        }
+
+        function selectQuizAnswer(option, answer) {
+            // Remove previous selections
+            const options = option.parentNode.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.style.background = '#f8f6f0';
+                opt.style.color = '#2d3748';
+                opt.style.transform = 'translateX(0px)';
+            });
+            
+            // Highlight selected option
+            option.style.background = '#ff6b9d';
+            option.style.color = 'white';
+            option.style.transform = 'translateX(10px)';
+            
+            // Show result
+            const result = document.getElementById('quiz-result');
+            result.textContent = answer;
+            result.style.opacity = '1';
+            
+            // Add some sparkle effect
+            setTimeout(() => {
+                result.innerHTML = answer + ' ✨💕✨';
+            }, 500);
+        }
+
+        function showFinalMessage(element) {
+            const finalMessage = element.querySelector('.final-message');
+            if (finalMessage.style.display === 'none') {
+                finalMessage.style.display = 'block';
+                element.querySelector('h3').textContent = 'You found the final surprise! 💕';
+                element.style.background = '#4ecdc4';
+                element.style.color = 'white';
+                element.style.boxShadow = '8px 8px 0px #ff6b9d';
+            }
+        }
+
+        // Touch/swipe support for mobile
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        document.getElementById('magazine').addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        });
+
+        document.getElementById('magazine').addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX;
+        });
+
+        document.getElementById('magazine').addEventListener('touchend', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            const diff = startX - currentX;
+            if (Math.abs(diff) > 50) { // Minimum swipe distance
+                if (diff > 0) {
+                    nextPage();
+                } else {
+                    previousPage();
+                }
+            }
+        });
+
+        // Initialize the game
+        const game = new WordleGame();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97c6ef1642ddce52',t:'MTc1NzQyMzUxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
